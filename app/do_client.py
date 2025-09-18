@@ -5,10 +5,12 @@ from typing import Dict, Any
 # API Config
 DO_API_URL = "https://inference.do-ai.run/v1/chat/completions"
 DO_API_KEY = os.getenv("DO_MODEL_ACCESS_KEY", "")
-MODEL_NAME = os.getenv("MODEL")
+MODEL_NAME = os.getenv("MODEL", "openai-gpt-4o")
 
 
 class DOClientError(Exception):
+    """Custom error for DO client"""
+
     pass
 
 
@@ -16,12 +18,12 @@ def call_do_gpt4o(
     prompt: str, system: str | None = None, timeout: int = 60
 ) -> Dict[str, Any]:
     """
-    Call DigitalOcean Inference Chat Completions endpoint.
+    Call DigitalOcean GPT-4o API with text prompt.
     Returns raw JSON response.
     """
     if not DO_API_KEY or DO_API_KEY == "YOUR_MODEL_ACCESS_KEY":
         raise DOClientError(
-            "DigitalOcean model access key not set. Set DO_MODEL_ACCESS_KEY env var."
+            "DigitalOcean model access key not set. Please set DO_MODEL_ACCESS_KEY env var."
         )
 
     headers = {
@@ -50,7 +52,7 @@ def call_do_gpt4o(
 
 def extract_assistant_content(response_json: Dict[str, Any]) -> str:
     """
-    Extract assistant textual content from common DO API response shapes.
+    Extract assistant textual content from DO API response.
     """
     if not response_json:
         return ""
@@ -68,10 +70,7 @@ def extract_assistant_content(response_json: Dict[str, Any]) -> str:
                     return msg.get("content", "") or ""
                 return ch.get("text", "") or ""
         if "output" in response_json:
-            out = response_json["output"]
-            if isinstance(out, list):
-                return " ".join([str(x) for x in out])
-            return str(out)
+            return str(response_json["output"])
         if "response" in response_json:
             return str(response_json["response"])
     return str(response_json)
@@ -84,7 +83,7 @@ def clean_ocr_text(raw_text: str) -> str:
     system_prompt = (
         "You are an assistant that cleans OCR text. "
         "Fix OCR mistakes, spelling, and formatting. "
-        "Preserve the original meaning and style. "
+        "Preserve the original meaning. "
         "Output only the cleaned text without extra commentary."
     )
 
@@ -92,5 +91,4 @@ def clean_ocr_text(raw_text: str) -> str:
         prompt=f"Clean and format this OCR text:\n\n{raw_text}",
         system=system_prompt,
     )
-
     return extract_assistant_content(response)
