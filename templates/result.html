@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+     <head>
+          <meta charset="utf-8" />
+          <title>OCR Result</title>
+          <link rel="stylesheet" href="/static/style.css" />
+     </head>
+     <body>
+          <div class="container">
+               <a href="/">← Back</a>
+               <h1>OCR Result</h1>
+
+               {% if error %}
+               <div class="error">{{ error }}</div>
+               {% endif %} {% if filename %}
+               <p><strong>Filename:</strong> {{ filename }}</p>
+               {% endif %} {% if meta %}
+               <p>
+                    <strong>Meta:</strong>
+                    {% for k,v in meta.items() %} {{ k }}: {{ v }}{% if not loop.last %} • {% endif %} {% endfor %}
+               </p>
+               {% endif %} {% if extracted_text %}
+               <h3>Extracted Text</h3>
+               <form action="/clean" method="post">
+                    <textarea name="extracted_text" rows="12" style="width: 100%">{{ extracted_text }}</textarea>
+                    <br />
+                    <button type="submit">Clean & Structure with GPT-4o (DigitalOcean)</button>
+               </form>
+               {% else %}
+               <p>No text extracted.</p>
+               {% endif %} {% if model_response %}
+               <h3>Model Response (raw)</h3>
+               <pre style="white-space: pre-wrap; background: #f7f7f7; padding: 12px">{{ model_response }}</pre>
+               {% endif %}
+          </div>
+     </body>
+</html>
