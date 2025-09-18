@@ -2,23 +2,50 @@
 <html lang="en">
      <head>
           <meta charset="UTF-8" />
-          <title>OCR Text Cleaning</title>
+          <title>OCR Upload</title>
           <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+          <style>
+               #loading {
+                    display: none;
+                    text-align: center;
+                    margin-top: 20px;
+               }
+          </style>
      </head>
      <body class="bg-light">
           <div class="container py-5">
-               <h2 class="mb-4 text-center">📝 OCR Text Cleaning (GPT-4o)</h2>
+               <h2 class="mb-4 text-center">📤 Upload Image for OCR (GPT-4o)</h2>
                <div class="card shadow-sm">
                     <div class="card-body">
-                         <form action="/process" method="post">
+                         <form id="ocrForm" action="/process" method="post" enctype="multipart/form-data">
                               <div class="mb-3">
-                                   <label for="raw_text" class="form-label">Masukkan OCR Text</label>
-                                   <textarea id="raw_text" name="raw_text" class="form-control" rows="8" placeholder="Paste OCR text here..."></textarea>
+                                   <label for="file" class="form-label">Choose Image (PNG, JPG, JPEG)</label>
+                                   <input type="file" id="file" name="file" class="form-control" accept="image/png, image/jpeg" required />
                               </div>
-                              <button type="submit" class="btn btn-primary w-100">🔍 Clean Text</button>
+                              <button type="submit" class="btn btn-primary w-100">🔍 Extract & Clean</button>
                          </form>
+
+                         <!-- Loading Spinner -->
+                         <div id="loading">
+                              <div class="spinner-border text-primary" role="status">
+                                   <span class="visually-hidden">Processing...</span>
+                              </div>
+                              <p class="mt-2">⏳ Extracting text, please wait...</p>
+                         </div>
                     </div>
                </div>
           </div>
+
+          <script>
+               const form = document.getElementById("ocrForm");
+               const loading = document.getElementById("loading");
+
+               form.addEventListener("submit", () => {
+                    // tampilkan loading
+                    loading.style.display = "block";
+                    // disable tombol biar ga dobel klik
+                    form.querySelector("button[type='submit']").disabled = true;
+               });
+          </script>
      </body>
 </html>
