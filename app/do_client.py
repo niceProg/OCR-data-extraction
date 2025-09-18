@@ -1,8 +1,8 @@
 import os
 import requests
-from typing import Tuple, Dict, Any
+from typing import Dict, Any
 
-# Use same endpoint the user provided
+# API Config
 DO_API_URL = "https://inference.do-ai.run/v1/chat/completions"
 DO_API_KEY = os.getenv("DO_MODEL_ACCESS_KEY", "")
 MODEL_NAME = os.getenv("MODEL")
@@ -16,8 +16,8 @@ def call_do_gpt4o(
     prompt: str, system: str | None = None, timeout: int = 60
 ) -> Dict[str, Any]:
     """
-    Call DigitalOcean Inference Chat Completions endpoint using the user's snippet format.
-    Returns the parsed JSON response (raw).
+    Call DigitalOcean Inference Chat Completions endpoint.
+    Returns raw JSON response.
     """
     if not DO_API_KEY or DO_API_KEY == "YOUR_MODEL_ACCESS_KEY":
         raise DOClientError(
@@ -37,7 +37,6 @@ def call_do_gpt4o(
     payload = {
         "model": MODEL_NAME,
         "messages": messages,
-        # you can add "temperature", "max_tokens" if supported by provider
     }
 
     resp = requests.post(DO_API_URL, headers=headers, json=payload, timeout=timeout)
@@ -51,9 +50,8 @@ def call_do_gpt4o(
 
 def extract_assistant_content(response_json: Dict[str, Any]) -> str:
     """
-    Try to extract assistant textual content from common response shapes.
+    Extract assistant textual content from common DO API response shapes.
     """
-    # OpenAI-like: choices[0].message.content
     if not response_json:
         return ""
 
@@ -68,11 +66,8 @@ def extract_assistant_content(response_json: Dict[str, Any]) -> str:
                 msg = ch.get("message")
                 if isinstance(msg, dict):
                     return msg.get("content", "") or ""
-                # older OpenAI style
                 return ch.get("text", "") or ""
-        # sometimes provider returns 'output' or 'response'
         if "output" in response_json:
-            # could be string or list
             out = response_json["output"]
             if isinstance(out, list):
                 return " ".join([str(x) for x in out])
@@ -80,3 +75,22 @@ def extract_assistant_content(response_json: Dict[str, Any]) -> str:
         if "response" in response_json:
             return str(response_json["response"])
     return str(response_json)
+
+
+def clean_ocr_text(raw_text: str) -> str:
+    """
+    Send raw OCR text to GPT-4o via DO API and return cleaned version.
+    """
+    system_prompt = (
+        "You are an assistant that cleans OCR text. "
+        "Fix OCR mistakes, spelling, and formatting. "
+        "Preserve the original meaning and style. "
+        "Output only the cleaned text without extra commentary."
+    )
+
+    response = call_do_gpt4o(
+        prompt=f"Clean and format this OCR text:\n\n{raw_text}",
+        system=system_prompt,
+    )
+
+    return extract_assistant_content(response)
