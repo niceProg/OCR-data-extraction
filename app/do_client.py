@@ -1,10 +1,13 @@
 import os
 import requests
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DO_API_URL = "https://inference.do-ai.run/v1/chat/completions"
-DO_API_KEY = os.getenv("DO_MODEL_ACCESS_KEY", "")
-MODEL_NAME = os.getenv("MODEL", "openai-gpt-4o")
+DO_API_KEY = os.getenv("DO_MODEL_ACCESS_KEY")
+MODEL_NAME = os.getenv("MODEL")
 
 
 class DOClientError(Exception):
